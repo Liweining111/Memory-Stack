@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+
+{% block title %}首页 - 社交分享平台{% endblock %}
+
+{% block content %}
+    <h2>最新动态</h2>
+    
+    {% if is_logged_in %}
+        <div style="margin-bottom: 20px;">
+            <a href="{{ url_for('new_post') }}" class="btn">发布新内容</a>
+        </div>
+    {% endif %}
+    
+    {% if posts %}
+        {% for post in posts %}
+            <div class="post">
+                <h3 class="post-title">
+                    <a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a>
+                </h3>
+                <div class="post-meta">
+                    <span>作者: {{ post.username }}</span> | 
+                    <span>发布于: {{ post.created_at }}</span>
+                </div>
+                <div class="post-content">
+                    {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
+                </div>
+                <div class="post-actions">
+                    <a href="{{ url_for('view_post', post_id=post.id) }}">
+                        <span>{{ post.comments_count or 0 }} 评论</span>
+                    </a> | 
+                    <a href="{{ url_for('view_post', post_id=post.id) }}">
+                        <span>{{ post.likes_count or 0 }} 赞</span>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>暂无内容</p>
+    {% endif %}
+{% endblock %}

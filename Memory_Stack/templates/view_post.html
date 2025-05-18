@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ post.title }} - Memory Stack{% endblock %}
+
+{% block content %}
+    <div class="post">
+        <h2 class="post-title">{{ post.title }}</h2>
+        <div class="post-meta">
+            <span>作者: {{ post.username }}</span> | 
+            <span>发布于: {{ post.created_at }}</span>
+        </div>
+        <div class="post-content" style="margin: 20px 0;">
+            {{ post.content }}
+        </div>
+        <div class="post-actions">
+            {% if is_logged_in %}
+                <form action="{{ url_for('like_post', post_id=post.id) }}" method="get" style="display: inline;">
+                    <button type="submit" class="btn" style="{% if user_liked %}background-color: #e74c3c;{% endif %}">
+                        {% if user_liked %}取消赞{% else %}赞{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+            <span style="margin-left: 10px;">{{ post.likes_count or 0 }} 人赞了这篇文章</span>
+            
+            {% if is_admin %}
+                <form action="{{ url_for('admin_delete_post', post_id=post.id) }}" method="post" style="display: inline; margin-left: 20px;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('确定要删除这篇文章吗？')">删除</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <h3>评论 ({{ comments|length }})</h3>
+        
+        {% if is_logged_in %}
+            <form action="{{ url_for('add_comment', post_id=post.id) }}" method="post" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <textarea class="form-control" name="content" placeholder="写下你的评论..." required></textarea>
+                </div>
+                <button type="submit" class="btn">发表评论</button>
+            </form>
+        {% else %}
+            <p>请<a href="{{ url_for('login') }}">登录</a>后参与评论</p>
+        {% endif %}
+        
+        {% if comments %}
+            <div style="margin-top: 20px;">
+                {% for comment in comments %}
+                    <div class="comment">
+                        <div class="comment-meta">
+                            <strong>{{ comment.username }}</strong> 评论于 {{ comment.created_at }}
+                            
+                            {% if is_admin %}
+                                <form action="{{ url_for('admin_delete_comment', comment_id=comment.id) }}" method="post" style="display: inline; float: right;">
+                                    <input type="hidden" name="post_id" value="{{ post.id }}">
+                                    <button type="submit" class="btn btn-danger" style="padding: 2px 8px; font-size: 12px;" onclick="return confirm('确定要删除这条评论吗？')">删除</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <div class="comment-content">
+                            {{ comment.content }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>暂无评论</p>
+        {% endif %}
+    </div>
+{% endblock %}

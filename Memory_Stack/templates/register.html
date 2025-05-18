@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+
+{% block title %}注册 - Memory Stack{% endblock %}
+
+{% block content %}
+    <h2>用户注册</h2>
+    <form method="post">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="email">电子邮箱</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+            <small>密码长度至少为6个字符</small>
+        </div>
+        <button type="submit" class="btn">注册</button>
+    </form>
+    <div style="margin-top: 20px;">
+        已有账号？<a href="{{ url_for('login') }}">立即登录</a>
+    </div>
+{% endblock %}

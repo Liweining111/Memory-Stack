@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>完善个人信息</h2>
+<form method="POST" enctype="multipart/form-data">
+    <div>
+        <label>昵称:</label>
+        <input type="text" name="nickname" required>
+    </div>
+    <div>
+        <label>个性签名:</label>
+        <textarea name="bio"></textarea>
+    </div>
+    <div>
+        <label>头像:</label>
+        <input type="file" name="avatar" accept="image/*">
+    </div>
+    <button type="submit">保存</button>
+    <a href="{{ url_for('profile') }}">跳过</a>
+</form>
+{% endblock %}

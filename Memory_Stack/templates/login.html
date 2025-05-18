@@ -1,0 +1,25 @@
+
+
+{% extends 'layout.html' %}
+
+{% block title %}登录 - Memory Stack{% endblock %}
+
+{% block content %}
+    <h2>用户登录</h2>
+    <form method="post">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn">登录</button>
+    </form>
+    <div style="margin-top: 20px;">
+        没有账号？<a href="{{ url_for('register') }}">立即注册</a>
+    </div>
+{% endblock %}
+
+Social Sharing App with User Roles and Content Management - Claude
