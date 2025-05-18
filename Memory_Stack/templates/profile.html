@@ -39,7 +39,7 @@
         <ul class="posts-list">
             {% for post in posts %}
                 <li class="post-item">
-                    <span class="post-title">{{ post.title }}</span> - <span class="post-date">{{ post.created_at }}</span>
+                    <span class="post-title">{{ post.title }}</span> - <span class="post-date">{{ post.created_at | format_datetime}}</span>
                 </li>
             {% endfor %}
         </ul>

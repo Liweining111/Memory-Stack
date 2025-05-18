@@ -185,6 +185,7 @@
 
         .post-title {
             font-size: 20px;
+            text-decoration: none;
             margin: 0 0 10px 0;
         }
 
@@ -368,7 +369,14 @@
             background-color: #2980b9;
             /* 保证hover效果正常 */
         }
+        .post-title a {
+            text-decoration: none; /* 去除下划线 */
+            color: #3498db;         /* 保持蓝色标题 */
+        }
 
+        .post-title a:hover {
+            text-decoration: underline; /* 可选：悬停时显示下划线，增加交互感 */
+        }
     </style>
 </head>
 <body>
