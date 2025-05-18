@@ -1,0 +1,14 @@
+/* 针对 .btn-primary 按钮，确保移除所有可能的边框 */
+a.btn.btn-primary {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* 确保按钮在点击或聚焦时也没有边框 */
+a.btn.btn-primary:focus,
+a.btn.btn-primary:active {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}

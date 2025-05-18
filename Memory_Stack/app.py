@@ -1,15 +1,34 @@
 import os
 import sqlite3
 import hashlib
+import random
 import secrets
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
+import pytz  # 导入 pytz 库
+# 设置默认时区为北京时间
+os.environ['TZ'] = 'Asia/Shanghai'
+try:
+    import time
+    time.tzset()  # 在类 Unix 系统上更新时区
+except AttributeError:
+    pass  # Windows 系统忽略 tzset
 
 # 创建Flask应用
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)  # 生成随机密钥
 app.config['DATABASE'] = os.path.join(app.root_path, 'social_app.db')
-
+# 添加时间格式化过滤器
+@app.template_filter('format_datetime')
+def format_datetime(value):
+    if isinstance(value, str):
+        # 假设数据库返回的 created_at 是字符串格式
+        dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+    else:
+        dt = value
+    cst = pytz.timezone('Asia/Shanghai')
+    dt_cst = dt.replace(tzinfo=pytz.UTC).astimezone(cst)
+    return dt_cst.strftime('%Y-%m-%d %H:%M:%S')
 
 # 数据库操作函数
 def get_db():
@@ -34,16 +53,20 @@ def init_db():
 
     # 创建用户表
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        role TEXT NOT NULL DEFAULT 'user',
-        is_active BOOLEAN NOT NULL DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
+       CREATE TABLE IF NOT EXISTS users (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           username TEXT UNIQUE NOT NULL,
+           password TEXT NOT NULL,
+           email TEXT UNIQUE NOT NULL,
+           role TEXT NOT NULL DEFAULT 'user',
+           is_active BOOLEAN NOT NULL DEFAULT 1,
+           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+           nickname TEXT,  -- 用户昵称
+           signature TEXT,  -- 个性签名
+           gender TEXT,     -- 性别
+           avatar TEXT      -- 头像
+       )
+       ''')
 
     # 创建帖子表
     cursor.execute('''
@@ -353,12 +376,79 @@ def login():
             session['username'] = user['username']
             session['user_role'] = user['role']
 
+            # 如果没有填写nickname，跳转到填写个人信息页面
+            if not user['nickname'] or not user['avatar']:
+                return redirect(url_for('edit_profile'))
+
             flash('登录成功', 'success')
             return redirect(url_for('index'))
         else:
             flash('用户名或密码错误', 'error')
 
     return render_template('login.html')
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    """显示用户个人信息"""
+    user = get_user_by_username(session['username'])
+
+    # 获取用户发布的帖子
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM posts WHERE user_id = ? AND is_deleted = 0', (user['id'],))
+    posts = cursor.fetchall()
+
+    return render_template('profile.html', user=user, posts=posts)
+
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    """编辑个人信息"""
+    user = get_user_by_username(session['username'])  # 获取用户信息
+
+    avatars = ['avatar1.jpg', 'avatar2.jpg', 'avatar3.jpg', 'avatar4.jpg', 'avatar5.jpg',
+               'avatar6.jpg', 'avatar7.jpg', 'avatar8.jpg', 'avatar9.jpg', 'avatar10.jpg']
+
+    # 如果没有头像，随机选择一个，并更新到数据库
+    if not user['avatar']:
+        new_avatar = random.choice(avatars)
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE users 
+            SET avatar = ? 
+            WHERE id = ?
+        ''', (new_avatar, user['id']))
+        conn.commit()
+
+        # 更新 user 字典中的 avatar 字段
+        user = get_user_by_username(session['username'])  # 重新获取用户信息
+
+    if request.method == 'POST':
+        nickname = request.form['nickname']
+        signature = request.form['signature']
+        gender = request.form['gender']
+        avatar = request.form['avatar']
+
+        if nickname and gender:  # 至少需要昵称和性别
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE users 
+                SET nickname = ?, signature = ?, gender = ?, avatar = ? 
+                WHERE id = ?
+            ''', (nickname, signature, gender, avatar, user['id']))
+            conn.commit()
+
+            flash('个人信息更新成功', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('昵称和性别是必填项', 'error')
+
+    return render_template('edit_profile.html', user=user, avatars=avatars)  # 传递头像列表
 
 
 @app.route('/logout')

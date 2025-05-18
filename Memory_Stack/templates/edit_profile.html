@@ -1,24 +1,50 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
+
+{% block title %}修改个人信息{% endblock %}
 
 {% block content %}
-<h2>编辑个人信息</h2>
-<form method="POST" enctype="multipart/form-data">
-    <div>
-        <label>昵称:</label>
-        <input type="text" name="nickname" value="{{ user.nickname }}">
-    </div>
-    <div>
-        <label>个性签名:</label>
-        <textarea name="bio">{{ user.bio }}</textarea>
-    </div>
-    <div>
-        <label>头像:</label>
-        <input type="file" name="avatar" accept="image/*">
-        {% if user.avatar %}
-        <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" class="current-avatar">
-        {% endif %}
-    </div>
-    <button type="submit">保存</button>
-    <a href="{{ url_for('profile') }}">取消</a>
-</form>
+    <h2>编辑个人信息</h2>
+    <form method="POST" action="{{ url_for('edit_profile') }}">
+        <div class="form-group">
+            <label for="nickname">昵称：</label>
+            <input type="text" id="nickname" name="nickname" class="form-control" value="{{ user['nickname'] or '' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="signature">个性签名：</label>
+            <input type="text" id="signature" name="signature" class="form-control" value="{{ user['signature'] or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="gender">性别：</label>
+            <select id="gender" name="gender" class="form-control" required>
+                <option value="male" {% if user['gender'] == 'male' %}selected{% endif %}>男</option>
+                <option value="female" {% if user['gender'] == 'female' %}selected{% endif %}>女</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="avatar">选择头像：</label>
+            <select id="avatar" name="avatar" class="form-control">
+                {% for avatar in avatars %}
+                    <option value="{{ avatar }}" {% if user['avatar'] == avatar %}selected{% endif %}>{{ avatar }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="posts">我的动态：</label>
+            <ul>
+                {% for post in posts %}
+                    <li>{{ post.title }} - {{ post.created_at }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+        <div class="form-group">
+            <button type="submit" class="btn">保存</button>
+            <a href="{{ url_for('index') }}" class="btn">跳过</a>
+        </div>
+    </form>
 {% endblock %}

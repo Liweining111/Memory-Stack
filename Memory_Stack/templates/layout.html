@@ -4,20 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Memory Stack{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap"
+          rel="stylesheet">
+    <link rel="icon" href="/static/images/favicon.jpg" type="image/jpeg">
     <style>
         body {
             font-family: 'Microsoft YaHei', sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    color: #333;
-    background-image: url("/static/images/login.png");
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-attachment: fixed;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-image: url("/static/images/login.png");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            animation: fadeIn 1.2s ease-in;
         }
-
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -25,9 +33,11 @@
         }
 
         header {
-            background-color: #3498db;
-            color: white;
+            background-color: rgba(245, 245, 220, 0.1); /* 半透明米白色 */
+            color: #333333;
             padding: 10px 0;
+            backdrop-filter: blur(6px); /* 毛玻璃质感 */
+            -webkit-backdrop-filter: blur(6px);
         }
 
         .navbar {
@@ -39,7 +49,10 @@
 
         .navbar h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 30px;
+            font-family: 'Cinzel',serif;
+            font-weight:700;
+            color:#333333;
         }
 
         .navbar-links {
@@ -48,13 +61,39 @@
         }
 
         .navbar-links a {
-            color: white;
+            color: #333333;
             text-decoration: none;
+            font-family: 'Cinzel', serif; /* 使用 Cinzel 字体 */
+            font-size: 18px; /* 增大字体提高可读性 */
+            font-weight: 400; /* 正常粗细 */
         }
 
         .navbar-links a:hover {
             text-decoration: underline;
+            color: #555555; /* 悬停时略暗，提升交互感 */
         }
+        .logo-title {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+            .logo-title h1 {
+                margin: 0;
+                font-size: 30px;
+                font-family: 'Cinzel', serif;
+                font-weight: 700;
+                color: #333333;
+                margin-bottom: 2px; /* 行间距更紧凑 */
+            }
+
+            .subtitle {
+                margin-top: 0;
+                margin-bottom: 0;
+                font-size: 13px;
+                line-height: 1.3;
+                font-family: 'Roboto Slab', serif;
+                color: white;
+            }
 
         .content {
             background-color: rgba(255, 255, 255, 0.5);;
@@ -189,32 +228,174 @@
         footer {
             text-align: center;
             padding: 20px 0;
-            color: #777;
+            color: white;
             font-size: 12px;
             margin-top: 40px;
         }
+        /* 个人信息界面样式 */
+        .profile-container {
+            background-color: rgba(255, 255, 255, 0.7); /* 更加清爽的背景 */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 增加阴影效果 */
+            margin-top: 20px;
+            max-width: 600px;
+            margin: 0 auto; /* 居中显示 */
+        }
+
+        .profile-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .form-group label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .form-group p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            display: inline-block;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* 动态列表样式 */
+        .post-list {
+            margin-top: 30px;
+            border-top: 2px solid #ddd;
+            padding-top: 20px;
+        }
+
+        .post-item {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .post-item .post-title {
+            font-weight: bold;
+            font-size: 18px;
+            color: #3498db;
+        }
+
+        .post-item .post-meta {
+            font-size: 14px;
+            color: #888;
+        }
+        /* 为大标题和文字加上白色框 */
+        .form-group {
+            margin-bottom: 25px; /* 增加项与项之间的间距 */
+            padding: 15px; /* 增加内边距 */
+            background-color: rgba(255, 255, 255, 0.6); /* 白色背景，轻微透明 */
+            border-radius: 8px; /* 边角圆滑 */
+            border: 2px solid #ddd; /* 白色框的边框 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 轻微阴影效果 */
+        }
+
+        .form-group label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .form-group p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* 头像容器也可以加个框 */
+        .avatar-img {
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            margin-bottom: 20px; /* 增加头像下方的间距 */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 为头像增加阴影 */
+            border: 5px solid #fff; /* 头像加一个白色框 */
+        }
+        /* 只移除最后一个 form-group 的白色框 */
+        .form-group:last-child {
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+        }
+        /* 表单项内的文字样式 */
+        .form-group label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .form-group p {
+            font-size: 16px;
+            color: #666;
+        }
+        /* 修复按钮的外观 */
+        .btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            border: none; /* 移除按钮边框 */
+            box-shadow: none; /* 移除按钮的阴影 */
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+            /* 保证hover效果正常 */
+        }
+
     </style>
 </head>
 <body>
     <header>
-        <div class="navbar">
+    <div class="navbar">
+        <div class="logo-title">
             <h1>Memory Stack</h1>
-            <div class="navbar-links">
-                <a href="{{ url_for('index') }}">首页</a>
-                {% if is_logged_in %}
-                    <a href="{{ url_for('new_post') }}">发布内容</a>
-                    {% if is_admin %}
-                        <a href="{{ url_for('admin_posts') }}">管理帖子</a>
-                        <a href="{{ url_for('admin_users') }}">管理用户</a>
-                    {% endif %}
-                    <a href="{{ url_for('logout') }}">退出 ({{ session.username }})</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}">登录</a>
-                    <a href="{{ url_for('register') }}">注册</a>
-                {% endif %}
-            </div>
+            <p class="subtitle">拾起生活的微光，记忆如栈，层层叠叠，温柔相依</p>
         </div>
-    </header>
+        <div class="navbar-links">
+            <a href="{{ url_for('index') }}">首页</a>
+            {% if is_logged_in %}
+                <a href="{{ url_for('new_post') }}">发布内容</a>
+                {% if is_admin %}
+                    <a href="{{ url_for('admin_posts') }}">管理帖子</a>
+                    <a href="{{ url_for('admin_users') }}">管理用户</a>
+                {% endif %}
+                <a href="{{ url_for('profile') }}">个人信息</a> <!-- 个人信息按钮 -->
+                <a href="{{ url_for('logout') }}">退出 ({{ session.username }})</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">登录</a>
+                <a href="{{ url_for('register') }}">注册</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
 
     <div class="container">
         <div class="flash-messages">
@@ -231,7 +412,7 @@
     </div>
 
     <footer>
-        &copy; {{ current_year }} Memory Stack | 版权所有
+        &copy; {{ current_year }} Memory Stack | 忆栈社交网络系统
     </footer>
 </body>
 </html>

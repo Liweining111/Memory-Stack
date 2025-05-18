@@ -7,7 +7,7 @@
         <h2 class="post-title">{{ post.title }}</h2>
         <div class="post-meta">
             <span>作者: {{ post.username }}</span> | 
-            <span>发布于: {{ post.created_at }}</span>
+            <span>发布于: {{ post.created_at | format_datetime}}</span>
         </div>
         <div class="post-content" style="margin: 20px 0;">
             {{ post.content }}
@@ -49,7 +49,7 @@
                 {% for comment in comments %}
                     <div class="comment">
                         <div class="comment-meta">
-                            <strong>{{ comment.username }}</strong> 评论于 {{ comment.created_at }}
+                            <strong>{{ comment.username }}</strong> 评论于 {{ comment.created_at | format_datetime}}
                             
                             {% if is_admin %}
                                 <form action="{{ url_for('admin_delete_comment', comment_id=comment.id) }}" method="post" style="display: inline; float: right;">

@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}首页 - 社交分享平台{% endblock %}
+{% block title %}首页 - Memory Stack{% endblock %}
 
 {% block content %}
     <h2>最新动态</h2>
@@ -19,22 +19,22 @@
                 </h3>
                 <div class="post-meta">
                     <span>作者: {{ post.username }}</span> | 
-                    <span>发布于: {{ post.created_at }}</span>
+                    <span>发布于: {{ post.created_at | format_datetime}}</span>
                 </div>
                 <div class="post-content">
                     {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
                 </div>
                 <div class="post-actions">
                     <a href="{{ url_for('view_post', post_id=post.id) }}">
-                        <span>{{ post.comments_count or 0 }} 评论</span>
+                        <span>{{ post.comments_count or 0 }} 💬评论</span>
                     </a> | 
                     <a href="{{ url_for('view_post', post_id=post.id) }}">
-                        <span>{{ post.likes_count or 0 }} 赞</span>
+                        <span>{{ post.likes_count or 0 }} ❤️赞</span>
                     </a>
                 </div>
             </div>
         {% endfor %}
     {% else %}
-        <p>暂无内容</p>
+        <p>暂无内容,期待你的第一条评论🤩</p>
     {% endif %}
 {% endblock %}
