@@ -3,14 +3,16 @@ import sqlite3
 import hashlib
 import random
 import secrets
+from PIL import Image
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 import pytz  # 导入 pytz 库
+from werkzeug.utils import secure_filename
 # 设置默认时区为北京时间
 os.environ['TZ'] = 'Asia/Shanghai'
 try:
     import time
-    time.tzset()  # 在类 Unix 系统上更新时区
+    time.tzset()
 except AttributeError:
     pass  # Windows 系统忽略 tzset
 
@@ -18,6 +20,11 @@ except AttributeError:
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)  # 生成随机密钥
 app.config['DATABASE'] = os.path.join(app.root_path, 'social_app.db')
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 24 * 1024 * 1024  # 最大24MB
+# 确保上传文件夹存在
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # 添加时间格式化过滤器
 @app.template_filter('format_datetime')
 def format_datetime(value):
@@ -80,7 +87,16 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
-
+    # 图片表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS post_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL,
+        image TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (post_id) REFERENCES posts (id)
+    )
+    ''')
     # 创建评论表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS comments (
@@ -95,7 +111,7 @@ def init_db():
     )
     ''')
 
-    # 创建赞表
+    # 创建点赞表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS likes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,7 +136,19 @@ def init_db():
 
     conn.commit()
 
-
+# 文件上传验证
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+# 图片压缩
+def compress_image(image, max_size=(2000, 2000), quality=85):
+    """压缩图片，限制最大尺寸和质量"""
+    img = Image.open(image)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+    output_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{secrets.token_hex(8)}.jpg")
+    img.save(output_path, 'JPEG', quality=quality)
+    return output_path
 # 用户认证相关函数
 def hash_password(password):
     """对密码进行哈希处理"""
@@ -163,25 +191,21 @@ def is_admin():
 
 def login_required(view):
     """登录验证装饰器"""
-
     def wrapped_view(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
         return view(*args, **kwargs)
-
     wrapped_view.__name__ = view.__name__
     return wrapped_view
 
 
 def admin_required(view):
     """管理员验证装饰器"""
-
     def wrapped_view(*args, **kwargs):
         if not is_admin():
             flash('需要管理员权限', 'error')
             return redirect(url_for('index'))
         return view(*args, **kwargs)
-
     wrapped_view.__name__ = view.__name__
     return wrapped_view
 
@@ -201,8 +225,12 @@ def get_all_posts():
         GROUP BY p.id
         ORDER BY p.created_at DESC
     ''')
-    return cursor.fetchall()
-
+    posts = [dict(row) for row in cursor.fetchall()]
+    # 获取每篇帖子的图片
+    for post in posts:
+        cursor.execute('SELECT image FROM post_images WHERE post_id = ? ORDER BY created_at', (post['id'],))
+        post['images'] = [row['image'] for row in cursor.fetchall()]
+    return posts
 
 def get_post_by_id(post_id):
     """根据ID获取帖子详情"""
@@ -219,10 +247,15 @@ def get_post_by_id(post_id):
         WHERE p.id = ? AND p.is_deleted = 0
         GROUP BY p.id
     ''', (post_id,))
-    return cursor.fetchone()
+    post = cursor.fetchone()
+    if post:
+        post = dict(post)
+        cursor.execute('SELECT image FROM post_images WHERE post_id = ? ORDER BY created_at', (post_id,))
+        post['images'] = [row['image'] for row in cursor.fetchall()]
+    return post
 
 
-def create_post(user_id, title, content):
+def create_post(user_id, title, content, image_files=None):
     """创建新帖子"""
     conn = get_db()
     cursor = conn.cursor()
@@ -230,14 +263,37 @@ def create_post(user_id, title, content):
         'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
         (user_id, title, content)
     )
+    post_id = cursor.lastrowid
+    if image_files:
+        for image in image_files:
+            if image and allowed_file(image.filename):
+                # 压缩图片
+                compressed_path = compress_image(image)
+                ext = image.filename.rsplit('.', 1)[1].lower()
+                image_filename = f"{secrets.token_hex(8)}.{ext}"
+                os.rename(compressed_path, os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+                cursor.execute(
+                    'INSERT INTO post_images (post_id, image) VALUES (?, ?)',
+                    (post_id, image_filename)
+                )
     conn.commit()
-    return cursor.lastrowid
-
+    return post_id
 
 def delete_post(post_id):
-    """删除帖子（标记为已删除）"""
+    """删除帖子并移除关联图片"""
     conn = get_db()
     cursor = conn.cursor()
+    # 获取图片文件名
+    cursor.execute('SELECT image FROM post_images WHERE post_id = ?', (post_id,))
+    images = [row['image'] for row in cursor.fetchall()]
+    # 删除图片文件
+    for image in images:
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], image)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+    # 删除图片记录
+    cursor.execute('DELETE FROM post_images WHERE post_id = ?', (post_id,))
+    # 标记帖子为已删除
     cursor.execute('UPDATE posts SET is_deleted = 1 WHERE id = ?', (post_id,))
     conn.commit()
     return cursor.rowcount > 0
@@ -398,15 +454,15 @@ def login():
 def profile():
     """显示用户个人信息"""
     user = get_user_by_username(session['username'])
-
     # 获取用户发布的帖子
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM posts WHERE user_id = ? AND is_deleted = 0', (user['id'],))
-    posts = cursor.fetchall()
-
+    posts = [dict(row) for row in cursor.fetchall()]
+    for post in posts:
+        cursor.execute('SELECT image FROM post_images WHERE post_id = ? ORDER BY created_at', (post['id'],))
+        post['images'] = [row['image'] for row in cursor.fetchall()]
     return render_template('profile.html', user=user, posts=posts)
-
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -428,10 +484,8 @@ def edit_profile():
             WHERE id = ?
         ''', (new_avatar, user['id']))
         conn.commit()
-
         # 更新 user 字典中的 avatar 字段
         user = get_user_by_username(session['username'])  # 重新获取用户信息
-
     if request.method == 'POST':
         nickname = request.form['nickname']
         signature = request.form['signature']
@@ -471,13 +525,21 @@ def new_post():
     if request.method == 'POST':
         title = request.form['title']
         content = request.form['content']
-
+        images = request.files.getlist('images')or []
         if not title or not content:
             flash('标题和内容不能为空', 'error')
-        else:
-            post_id = create_post(session['user_id'], title, content)
-            flash('帖子发布成功', 'success')
-            return redirect(url_for('view_post', post_id=post_id))
+            return render_template('new_post.html')
+        image_files = [img for img in images if img and allowed_file(img.filename)]
+        if len(image_files) > 9:  # 限制最多9张图片
+            flash('最多上传9张图片', 'error')
+            return render_template('new_post.html')
+        if any(img and not allowed_file(img.filename) for img in images):
+            flash('不支持的文件格式，仅支持png、jpg、jpeg、gif', 'error')
+            return render_template('new_post.html')
+
+        post_id = create_post(session['user_id'], title, content, image_files)
+        flash('帖子发布成功', 'success')
+        return redirect(url_for('view_post', post_id=post_id))
 
     return render_template('new_post.html')
 
@@ -536,7 +598,6 @@ def admin_posts():
     posts = get_all_posts()
     return render_template('admin_posts.html', posts=posts)
 
-
 @app.route('/admin/post/<int:post_id>/delete', methods=['POST'])
 @login_required
 @admin_required
@@ -546,9 +607,7 @@ def admin_delete_post(post_id):
         flash('帖子已删除', 'success')
     else:
         flash('删除帖子失败', 'error')
-
     return redirect(url_for('admin_posts'))
-
 
 @app.route('/admin/users')
 @login_required
@@ -573,7 +632,6 @@ def admin_ban_user(user_id):
             flash('封禁用户失败', 'error')
 
     return redirect(url_for('admin_users'))
-
 
 @app.route('/admin/user/<int:user_id>/unban', methods=['POST'])
 @login_required
@@ -605,7 +663,6 @@ def admin_delete_comment(comment_id):
         return redirect(url_for('admin_posts'))
 
 
-# 提供简单的HTML模板（在实际应用中应该使用真正的模板文件）
 @app.context_processor
 def inject_globals():
     """注入全局模板变量"""

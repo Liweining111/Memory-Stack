@@ -39,7 +39,14 @@
         <ul class="posts-list">
             {% for post in posts %}
                 <li class="post-item">
-                    <span class="post-title">{{ post.title }}</span> - <span class="post-date">{{ post.created_at | format_datetime}}</span>
+                    <span class="post-title">{{ post.title }}</span> - <span class="post-date">{{ post.created_at }}</span>
+                    {% if post.images and post.images|length > 0 %}
+                        <div class="post-images">
+                            {% for image in post.images %}
+                                <img src="{{ url_for('static', filename='uploads/' + image) }}" alt="帖子图片" class="post-thumbnail">
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>

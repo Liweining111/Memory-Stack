@@ -1,7 +1,5 @@
 {% extends 'layout.html' %}
-
 {% block title %}{{ post.title }} - Memory Stack{% endblock %}
-
 {% block content %}
     <div class="post">
         <h2 class="post-title">{{ post.title }}</h2>
@@ -9,8 +7,15 @@
             <span>作者: {{ post.nickname or post.username}}</span> |
             <span>发布于: {{ post.created_at | format_datetime}}</span>
         </div>
-        <div class="post-content" style="margin: 20px 0;">
+         <div class="post-content" style="margin: 20px 0;">
             {{ post.content }}
+            {% if post['images'] %}
+                <div class="image-gallery">
+                    {% for image in post['images'] %}
+                        <img src="{{ url_for('static', filename='uploads/' + image) }}" alt="帖子图片" class="post-image">
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
         <div class="post-actions">
             {% if is_logged_in %}

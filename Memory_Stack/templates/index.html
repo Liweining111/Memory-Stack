@@ -23,6 +23,13 @@
                 </div>
                 <div class="post-content">
                     {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
+                    {% if post.images and post.images|length > 0 %}
+                        <div class="image-container">
+                            {% for image in post.images %}
+                                <img src="{{ url_for('static', filename='uploads/' + image) }}" alt="帖子图片" class="post-thumbnail">
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="post-actions">
                     <a href="{{ url_for('view_post', post_id=post.id) }}">

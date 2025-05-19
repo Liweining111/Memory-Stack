@@ -12,3 +12,115 @@ a.btn.btn-primary:active {
     outline: none !important;
     box-shadow: none !important;
 }
+.post {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    overflow: hidden; /* 防止内容溢出 */
+}
+.post-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.post-content {
+    margin: 10px 0;
+    overflow: hidden; /* 清除浮动，确保内容区域正常 */
+}
+.post-thumbnail {
+    max-width: 100px;
+    height: auto;
+    display: block; /* 确保图片为块级元素 */
+    margin: 10px 0; /* 添加外边距，防止挤压其他内容 */
+}
+/* 图片预览样式 */
+.preview-container {
+    position: relative;
+    display: inline-block;
+}
+
+.preview-image {
+    max-width: 100px;
+    height: auto;
+    border-radius: 4px;
+}
+
+.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .post-image {
+        max-width: 100%;
+    }
+
+    .post-thumbnail {
+        max-width: 80px;
+    }
+
+    .post-content {
+        overflow: hidden;
+    }
+
+    .image-gallery {
+        flex-direction: column;
+    }
+}
+.image-container, .image-gallery{
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 620px; /* 限制每行最多三张图片 */
+    margin-left: 20px;
+}
+.image-container img , .image-gallery .post-image{
+    width: 200px;
+    height: auto;
+    max-width: 100%; /* 响应式，防止溢出 */
+}
+
+.post-meta, .post-actions {
+    color: #666;
+    font-size: 14px;
+}
+
+.post-title {
+    margin: 0;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+@media (max-width: 480px) {
+    .post-thumbnail {
+        max-width: 60px;
+    }
+
+    .preview-image {
+        max-width: 80px;
+    }
+}
