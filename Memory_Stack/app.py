@@ -192,7 +192,7 @@ def get_all_posts():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT p.*, u.username, COUNT(DISTINCT l.id) as likes_count, COUNT(DISTINCT c.id) as comments_count
+        SELECT p.*, u.username, u.nickname, COUNT(DISTINCT l.id) as likes_count, COUNT(DISTINCT c.id) as comments_count
         FROM posts p
         JOIN users u ON p.user_id = u.id
         LEFT JOIN likes l ON p.id = l.post_id
@@ -209,10 +209,15 @@ def get_post_by_id(post_id):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT p.*, u.username
+        SELECT p.*, u.username,u.nickname,
+               COUNT(DISTINCT l.id) as likes_count, 
+               COUNT(DISTINCT c.id) as comments_count
         FROM posts p
         JOIN users u ON p.user_id = u.id
+        LEFT JOIN likes l ON p.id = l.post_id
+        LEFT JOIN comments c ON p.id = c.post_id AND c.is_deleted = 0
         WHERE p.id = ? AND p.is_deleted = 0
+        GROUP BY p.id
     ''', (post_id,))
     return cursor.fetchone()
 
@@ -244,7 +249,7 @@ def get_comments_by_post_id(post_id):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT c.*, u.username
+        SELECT c.*, u.username,u.nickname
         FROM comments c
         JOIN users u ON c.user_id = u.id
         WHERE c.post_id = ? AND c.is_deleted = 0

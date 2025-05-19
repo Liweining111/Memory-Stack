@@ -18,7 +18,7 @@
                     <a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a>
                 </h3>
                 <div class="post-meta">
-                    <span>作者: {{ post.username }}</span> | 
+                    <span>作者: {{ post.nickname }}</span> |
                     <span>发布于: {{ post.created_at | format_datetime}}</span>
                 </div>
                 <div class="post-content">
@@ -35,6 +35,6 @@
             </div>
         {% endfor %}
     {% else %}
-        <p>暂无内容,期待你的第一条评论🤩</p>
+        <p>暂无内容,期待你的第一条说说🤩</p>
     {% endif %}
 {% endblock %}

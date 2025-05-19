@@ -1,58 +1,65 @@
 {% extends 'layout.html' %}
 
-{% block title %}管理用户 -Memory Stack{% endblock %}
+{% block title %}管理帖子 - Memory Stack{% endblock %}
 
 {% block content %}
-    <h2>管理用户</h2>
-    
-    {% if users %}
-        <table style="width: 100%; border-collapse: collapse;">
+    <h2>管理帖子</h2>
+
+    {% if posts %}
+        <table style="width: 100%; border-collapse: collapse; background-color: #fff;">
             <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">ID</th>
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">用户名</th>
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">邮箱</th>
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">角色</th>
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">状态</th>
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">注册时间</th>
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">操作</th>
+                <tr style="background-color: #f2f2f2; color: #333333;">
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">ID</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">标题</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">作者</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">点赞数</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">评论数</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">创建时间</th>
+                    <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd;">操作</th>
                 </tr>
             </thead>
             <tbody>
-                {% for user in users %}
+                {% for post in posts %}
                     <tr>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user.id }}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user.username }}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user.email }}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user.role }}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">
-                            {% if user.is_active %}
-                                <span style="color: green;">正常</span>
-                            {% else %}
-                                <span style="color: red;">已封禁</span>
-                            {% endif %}
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd; color: #333333;">{{ post.id }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                            <a href="{{ url_for('view_post', post_id=post.id) }}" style="color: #333333; text-decoration: none;">{{ post.title }}</a>
                         </td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user.created_at }}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">
-                            {% if user.id != session.user_id %}
-                                {% if user.is_active %}
-                                    <form action="{{ url_for('admin_ban_user', user_id=user.id) }}" method="post" style="display: inline;">
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('确定要封禁这个用户吗？')">封禁</button>
-                                    </form>
-                                {% else %}
-                                    <form action="{{ url_for('admin_unban_user', user_id=user.id) }}" method="post" style="display: inline;">
-                                        <button type="submit" class="btn" onclick="return confirm('确定要解封这个用户吗？')">解封</button>
-                                    </form>
-                                {% endif %}
-                            {% else %}
-                                <span style="color: #777;">当前用户</span>
-                            {% endif %}
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd; color: #333333;">{{ post.username }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd; color: #333333;">{{ post.likes_count }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd; color: #333333;">{{ post.comments_count }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd; color: #333333;">{{ post.created_at | format_datetime}}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+                            <form action="{{ url_for('admin_delete_post', post_id=post.id) }}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('确定要删除这个帖子吗？')" style="background-color: #dc3545; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">删除</button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>暂无用户</p>
+        <p style="color: #333333;">暂无帖子</p>
     {% endif %}
+
+    <style>
+        table {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            font-size: 14px;
+        }
+        tr:hover {
+            background-color: #f5f5dc; /* 米白色，与导航栏一致 */
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .btn-danger:hover {
+            background-color: #c82333; /* 删除按钮悬停颜色 */
+        }
+    </style>
 {% endblock %}
